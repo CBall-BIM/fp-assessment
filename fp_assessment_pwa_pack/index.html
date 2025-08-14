@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>FP Assessment — Mobile (PWA)</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#0b6cff">
+  <link rel="icon" href="icons/icon-192.png" sizes="192x192">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <style>
+    :root{
+      --bg:#f7f9fc; --card:#ffffff; --muted:#5b6573; --text:#111827; --accent:#0b6cff;
+      --ok:#2e7d32; --warn:#b26a00; --border:#e5e7eb; --focus:#3b82f6;
+      --badge1:#1e5631; --badge2:#f4a261; --badge3:#e63946;
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color: transparent}
+    html,body{height:100%}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;background:var(--bg);color:var(--text)}
+    .wrap{max-width:1000px;margin:16px auto;padding:0 12px}
+    h1{font-size:22px;margin:0 0 6px;display:flex;align-items:center;gap:8px}
+    .status{display:inline-block;padding:4px 8px;border-radius:999px;border:1px solid var(--border);font-size:12px}
+    .ok{background:#e8f5e9;color:#1b5e20}
+    .err{background:#ffebee;color:#b71c1c}
+    .sub{color:var(--muted);margin-bottom:10px;font-size:13px}
+    .bar{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0;align-items:center}
+    input[type="text"], input[type="number"], select{
+      background:var(--card);border:1px solid var(--border);color:var(--text);
+      padding:14px 12px;border-radius:12px;outline:none;font-size:16px;min-height:44px
+    }
+    input[type="text"]:focus, input[type="number"]:focus, select:focus{border-color:var(--focus);box-shadow:0 0 0 3px #3b82f622}
+    button{
+      background:#0b6cff;border:1px solid #0b6cff;color:#fff;
+      padding:12px 14px;border-radius:12px;cursor:pointer;font-size:16px;min-height:44px;
+      transition:transform .05s ease, background-color .15s ease, box-shadow .15s ease
+    }
+    button.secondary{background:#f3f4f6;border-color:var(--border);color:var(--text)}
+    button.ghost{background:transparent;border:1px dashed var(--border);color:#334155}
+    button:active{transform:scale(.98)}
+    button:disabled{opacity:.6;cursor:not-allowed}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:10px;margin:10px 0;box-shadow:0 8px 20px #0000000d}
+    table{width:100%;border-collapse:separate;border-spacing:0;min-width:820px}
+    thead th{position:sticky;top:0;background:var(--card);z-index:1;user-select:none;cursor:pointer}
+    th,td{border-bottom:1px solid var(--border);padding:10px 8px;text-align:left;font-size:14px}
+    tbody tr:hover{background:#f9fafb}
+    .right{margin-left:auto}
+    .muted{color:var(--muted)}
+    .small{font-size:.9rem}
+    .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-weight:600;border:1px solid #0002}
+    .tier-1{background:var(--badge1);color:#fff}
+    .tier-2{background:var(--badge2);color:#000}
+    .tier-3{background:var(--badge3);color:#fff}
+    .sort-ind{opacity:.6}
+    .pill{display:inline-block;padding:6px 10px;border:1px solid var(--border);border-radius:999px;background:#f8fafc;color:#475569;font-size:13px}
+    .sticky-footer{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);padding:8px 12px;display:flex;gap:8px;align-items:center;z-index:50;transition:transform .18s ease}
+    .sticky-footer button{flex:1}
+    .sticky-footer.hidden{transform:translateY(110%)}
+    .fab{position:fixed;right:12px;bottom:12px;z-index:60;display:none}
+    .spacer{height:0}
+    @media (min-width: 900px){ .sticky-footer{position:static} .fab{display:none} }
+    @media print{ .no-print{display:none !important} body{background:#fff;color:#000} .card{box-shadow:none} }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>FP Assessment — Mobile (PWA) <span id="status" class="status">Loading…</span></h1>
+    <div class="sub">
+      Tap column headers to sort. Scores allowed: <b>1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5</b>.
+    </div>
+
+    <div class="card">
+      <div class="bar">
+        <select id="seasonSelect" aria-label="Season">
+          <option value="">— Season —</option><option>Spring</option><option>Fall</option>
+        </select>
+        <select id="yearSelect" aria-label="Year">
+          <option value="">— Year —</option>
+          <option>2025</option><option>2026</option><option>2027</option><option>2028</option><option>2029</option>
+          <option>2030</option><option>2031</option><option>2032</option><option>2033</option><option>2034</option>
+          <option>2035</option><option>2036</option><option>2037</option><option>2038</option><option>2039</option>
+          <option>2040</option><option>2041</option><option>2042</option><option>2043</option><option>2044</option>
+          <option>2045</option><option>2046</option><option>2047</option><option>2048</option><option>2049</option>
+          <option>2050</option>
+        </select>
+        <input id="divisionInput" type="text" placeholder="Division (e.g., 8u)" style="flex:1 1 140px">
+      </div>
+      <div class="bar">
+        <button id="createDivisionBtn" type="button">Create / Switch</button>
+        <button id="renameDivisionBtn" type="button" class="secondary">Rename</button>
+        <button id="deleteDivisionBtn" type="button" class="secondary">Delete</button>
+        <span class="right pill" id="contextPill">Season: — • Year: — • Division: —</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="bar">
+        <input id="playerNumber" inputmode="numeric" pattern="[0-9]*" type="number" min="0" step="1" placeholder="#">
+        <input id="lastName" type="text" placeholder="Last name" style="flex:1 1 140px">
+        <input id="firstName" type="text" placeholder="First name" style="flex:1 1 140px">
+        <button id="addPlayerBtn" type="button">Add Player</button>
+      </div>
+    </div>
+
+    <div class="card" style="overflow:auto">
+      <table>
+        <thead>
+          <tr>
+            <th data-key="rank">Rank <span class="sort-ind" id="ind-rank"></span></th>
+            <th data-key="number">No. <span class="sort-ind" id="ind-number"></span></th>
+            <th data-key="last">Last <span class="sort-ind" id="ind-last"></span></th>
+            <th data-key="first">First <span class="sort-ind" id="ind-first"></span></th>
+            <th data-key="Fielding">Fielding <span class="sort-ind" id="ind-Fielding"></span></th>
+            <th data-key="Throwing">Throwing <span class="sort-ind" id="ind-Throwing"></span></th>
+            <th data-key="Hitting">Hitting <span class="sort-ind" id="ind-Hitting"></span></th>
+            <th data-key="Fly">Fly <span class="sort-ind" id="ind-Fly"></span></th>
+            <th data-key="Total">Total <span class="sort-ind" id="ind-Total"></span></th>
+            <th data-key="Average">Average <span class="sort-ind" id="ind-Average"></span></th>
+            <th data-key="Tier">Tier <span class="sort-ind" id="ind-Tier"></span></th>
+            <th class="no-print">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="gridBody"></tbody>
+      </table>
+    </div>
+
+    <!-- Spacer to ensure footer doesn't cover content -->
+    <div id="spacer" class="spacer"></div>
+  </div>
+
+  <div class="sticky-footer no-print" id="footer">
+    <button id="hideFooterBtn" type="button" class="ghost" style="flex:0 0 auto">▾ Hide</button>
+    <button id="finalizeBtn" type="button">End Assessment</button>
+    <button id="reopenBtn" type="button" class="secondary" style="display:none">Reopen</button>
+    <button id="exportCsvBtn" type="button" class="secondary">Export CSV</button>
+    <button id="printBtn" type="button" class="secondary">Print</button>
+    <input id="importCsv" type="file" accept=".csv" style="display:none">
+  </div>
+
+  <button id="showFooterFab" class="fab" style="display:none">Show Actions</button>
+
+<script>
+// Service worker registration
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(err => {
+      console.warn('SW registration failed', err);
+    });
+  });
+}
+</script>
+
+<script>
+'use strict'; (function(){
+  const statusEl = document.getElementById('status');
+  function setStatus(ok,msg){ statusEl.textContent = msg; statusEl.className = 'status ' + (ok?'ok':'err'); }
+  try{
+    const DIV_KEY = 'fp_assessment_mobile_pwa_v1';
+    const CRITERIA = ['Fielding','Throwing','Hitting','Fly'];
+    const ALLOWED = ["", 1,1.5,2,2.5,3,3.5,4,4.5,5];
+
+    const el = id => document.getElementById(id);
+    const state = load() || { divisions:{}, current:'', season:'', year:'' };
+
+    const seasonSelect = el('seasonSelect');
+    const yearSelect = el('yearSelect');
+    const divisionInput = el('divisionInput');
+    const createDivisionBtn = el('createDivisionBtn');
+    const renameDivisionBtn = el('renameDivisionBtn');
+    const deleteDivisionBtn = el('deleteDivisionBtn');
+    const exportCsvBtn = el('exportCsvBtn');
+    const finalizeBtn = el('finalizeBtn');
+    const reopenBtn = el('reopenBtn');
+    const importCsv = el('importCsv');
+    const printBtn = el('printBtn');
+    const addPlayerBtn = el('addPlayerBtn');
+    const playerNumber = el('playerNumber');
+    const lastName = el('lastName');
+    const firstName = el('firstName');
+    const gridBody = el('gridBody');
+    const contextPill = el('contextPill');
+
+    const footer = el('footer');
+    const spacer = el('spacer');
+    const hideFooterBtn = el('hideFooterBtn');
+    const showFooterFab = el('showFooterFab');
+
+    let sort = { key: 'number', dir: 'asc' };
+
+    // Footer spacing + hide/show
+    function fitSpacer(){ const h = footer.offsetHeight || 0; spacer.style.height = (h + 12) + 'px'; }
+    window.addEventListener('resize', fitSpacer, {passive:true});
+    fitSpacer();
+    let lastY = window.scrollY;
+    window.addEventListener('scroll', () => {
+      const y = window.scrollY;
+      if (y > lastY + 12) hideFooter();
+      else if (y < lastY - 12) showFooter();
+      lastY = y;
+    }, {passive:true});
+    function hideFooter(){ footer.classList.add('hidden'); showFooterFab.style.display = 'block'; fitSpacer(); }
+    function showFooter(){ footer.classList.remove('hidden'); showFooterFab.style.display = 'none'; fitSpacer(); }
+    hideFooterBtn.addEventListener('click', hideFooter);
+    showFooterFab.addEventListener('click', showFooter);
+
+    if(state.season) seasonSelect.value = state.season;
+    if(state.year) yearSelect.value = state.year;
+    if(state.current) divisionInput.value = state.current;
+
+    wire();
+    render();
+    setStatus(true,'Ready');
+
+    function wire(){
+      seasonSelect.addEventListener('change', ()=>{ state.season = seasonSelect.value; save(); updateContextPill(); });
+      yearSelect.addEventListener('change',   ()=>{ state.year = yearSelect.value; save(); updateContextPill(); });
+      createDivisionBtn.addEventListener('click', createOrSwitchDivision);
+      renameDivisionBtn.addEventListener('click', renameDivision);
+      deleteDivisionBtn.addEventListener('click', deleteDivision);
+      exportCsvBtn.addEventListener('click', onExportCsv);
+      printBtn.addEventListener('click', ()=> window.print());
+      finalizeBtn.addEventListener('click', onFinalize);
+      reopenBtn.addEventListener('click', onReopen);
+      addPlayerBtn.addEventListener('click', onAddPlayer);
+      document.querySelectorAll('thead th[data-key]').forEach(th => {
+        th.addEventListener('click', ()=>{
+          const key = th.getAttribute('data-key');
+          sort = (sort.key===key) ? { key, dir: (sort.dir==='asc'?'desc':'asc') } : { key, dir:'asc' };
+          render();
+        });
+      });
+    }
+    function load(){ try{ return JSON.parse(localStorage.getItem(DIV_KEY)); }catch{ return null } }
+    function save(){ localStorage.setItem(DIV_KEY, JSON.stringify(state)); }
+    function ensureDivision(name){ if(!state.divisions[name]) state.divisions[name] = { players:[], scores:{}, finalized:false }; }
+    function uid(){ try{ return (crypto && crypto.getRandomValues)? (crypto.getRandomValues(new Uint32Array(1))[0].toString(36)) : Math.random().toString(36).slice(2,10);}catch(e){return Math.random().toString(36).slice(2,10);} }
+    function fmt(n){ return (typeof n==='number' && !isNaN(n)) ? n.toFixed(2) : ''; }
+    function esc(s){ s = String(s||''); s = s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); s = s.replace(/"/g,'&quot;').replace(/'/g,'&#39;'); return s; }
+
+    function updateContextPill(){
+      contextPill.textContent = `Season: ${state.season||'—'} • Year: ${state.year||'—'} • Division: ${state.current||'—'}`;
+    }
+
+    function createOrSwitchDivision(){
+      const nameInput = (divisionInput.value||'').trim();
+      if(!nameInput){ alert('Enter a division name, e.g., 8u'); return; }
+      ensureDivision(nameInput);
+      state.current = nameInput; save(); render(); toast('Switched to ' + nameInput);
+    }
+    function renameDivision(){
+      if(!state.current){ alert('No division selected'); return; }
+      const t = prompt('Rename division', state.current);
+      if(!t || t.trim()===state.current) return;
+      const n = t.trim();
+      if(state.divisions[n]){ alert('That division already exists.'); return; }
+      state.divisions[n] = state.divisions[state.current];
+      delete state.divisions[state.current];
+      state.current = n; divisionInput.value = n; save(); render(); toast('Renamed to ' + n);
+    }
+    function deleteDivision(){
+      if(!state.current){ alert('No division selected'); return; }
+      if(!confirm(`Delete division "${state.current}"?`)) return;
+      delete state.divisions[state.current];
+      state.current=''; divisionInput.value=''; save(); render(); toast('Division deleted');
+    }
+
+    function onAddPlayer(){
+      let divName = state.current;
+      if(!divName){
+        const typed = (divisionInput.value||'').trim();
+        if(!typed){ alert('Enter Division (e.g., 10u) first'); return; }
+        ensureDivision(typed);
+        state.current = typed;
+        divName = typed;
+      }
+      const num = playerNumber.value.trim();
+      const last = (lastName.value||'').trim();
+      const first = (firstName.value||'').trim();
+      if(!last || !first){ alert('Enter both last and first name.'); return; }
+      const div = state.divisions[divName];
+      const id = uid();
+      div.players.push({ id, number: num || '', last, first });
+      div.scores[id] = { Fielding:'', Throwing:'', Hitting:'', Fly:'' };
+      playerNumber.value=''; lastName.value=''; firstName.value='';
+      save(); render(); toast('Player added');
+    }
+
+    function onScoreInput(pid, key, val){
+      const allowed = ALLOWED.map(String);
+      if(!allowed.includes(String(val))) return;
+      state.divisions[state.current].scores[pid][key] = val==='' ? '' : Number(val);
+      save(); updateRowComputed(pid);
+    }
+
+    function compute(player){
+      const s = (state.divisions[state.current]?.scores||{})[player.id]||{};
+      const vals = CRITERIA.map(k=> s[k]);
+      const filled = vals.filter(v=> v!=='' && !isNaN(v));
+      const total = filled.reduce((a,b)=> a + Number(b||0), 0);
+      const avg = filled.length ? total / CRITERIA.length : 0;
+      return { total, avg };
+    }
+    function assignTiers(sortedByAvg){
+      const n = sortedByAvg.length; if(!n) return {};
+      const t1Cut = Math.ceil(n/3);
+      const t3Cut = Math.floor(n/3);
+      const t2Cut = n - t1Cut - t3Cut;
+      sortedByAvg.forEach((row,i)=>{ if(i<t1Cut) row.tier=1; else if(i < t1Cut + t2Cut) row.tier=2; else row.tier=3; });
+      [t1Cut, t1Cut+t2Cut].forEach(bi=>{ if(bi<=0||bi>=n) return; const bAvg=sortedByAvg[bi-1]?.cmp.avg; let j=bi; while(j<n && sortedByAvg[j].cmp.avg===bAvg){ sortedByAvg[j].tier = sortedByAvg[bi-1].tier; j++; } });
+      const map={}; sortedByAvg.forEach(r=> map[r.p.id]=r.tier); return map;
+    }
+
+    function render(){
+      const div = state.current ? state.divisions[state.current] : null;
+      finalizeBtn.style.display = div && !div.finalized ? '' : (div ? 'none' : '');
+      reopenBtn.style.display = div && div.finalized ? '' : 'none';
+      updateSortIndicators();
+      updateContextPill();
+      renderBody();
+    }
+    function updateSortIndicators(){ document.querySelectorAll('.sort-ind').forEach(e=> e.textContent=''); const ind = document.getElementById('ind-'+sort.key); if(ind) ind.textContent = sort.dir==='asc' ? '▲' : '▼'; }
+    function scoreSelect(pid, key, current){
+      const values = ["", 1,1.5,2,2.5,3,3.5,4,4.5,5];
+      const options = values.map(v => {
+        const val = String(v), label = v === "" ? "" : val, sel = (current!=='' && String(current)===val) ? ' selected' : '';
+        return `<option value="${val}"${sel}>${label}</option>`;
+      }).join('');
+      return `<select data-pid="${pid}" data-key="${key}">${options}</select>`;
+    }
+    function getRows(){
+      if(!state.current || !state.divisions[state.current]) return [];
+      const div = state.divisions[state.current];
+      const base = div.players.map(p=> ({ p, cmp: compute(p) }));
+      let tierMap = {};
+      if(div.finalized){ const byAvg = base.slice().sort((a,b)=> b.cmp.avg - a.cmp.avg); tierMap = assignTiers(byAvg.map(r=>({...r,tier:0}))); }
+      const rows = base.slice();
+      const collator = new Intl.Collator(undefined, { sensitivity:'base', numeric:true });
+      const num = v => (v===''||v===undefined||v===null)? NaN : Number(v);
+      rows.sort((a,b)=>{
+        const asc = sort.dir==='asc' ? 1 : -1;
+        switch(sort.key){
+          case 'rank': { const sign = (sort.dir==='asc' ? -1 : 1); return sign * ((a.cmp.avg||0) - (b.cmp.avg||0)); }
+          case 'number': return asc * (((num(a.p.number)||0) - (num(b.p.number)||0)));
+          case 'last': return asc * collator.compare(a.p.last||'', b.p.last||'');
+          case 'first': return asc * collator.compare(a.p.first||'', b.p.first||'');
+          case 'Fielding': return asc * ((num(state.divisions[state.current].scores[a.p.id]?.Fielding)||0) - (num(state.divisions[state.current].scores[b.p.id]?.Fielding)||0));
+          case 'Throwing': return asc * ((num(state.divisions[state.current].scores[a.p.id]?.Throwing)||0) - (num(state.divisions[state.current].scores[b.p.id]?.Throwing)||0));
+          case 'Hitting': return asc * ((num(state.divisions[state.current].scores[a.p.id]?.Hitting)||0) - (num(state.divisions[state.current].scores[b.p.id]?.Hitting)||0));
+          case 'Fly': return asc * ((num(state.divisions[state.current].scores[a.p.id]?.Fly)||0) - (num(state.divisions[state.current].scores[b.p.id]?.Fly)||0));
+          case 'Total': return asc * ((a.cmp.total||0) - (b.cmp.total||0));
+          case 'Average': return asc * ((a.cmp.avg||0) - (b.cmp.avg||0));
+          case 'Tier': return asc * (((tierMap[a.p.id]||99) - (tierMap[b.p.id]||99)));
+          default: return 0;
+        }
+      });
+      return rows.map((r,i)=> ({...r, tier: tierMap[r.p.id]||0, rowIndex: i+1}));
+    }
+    function renderBody(){
+      gridBody.innerHTML='';
+      if(!state.current || !state.divisions[state.current]) return;
+      const div = state.divisions[state.current];
+      const rows = getRows();
+      rows.forEach(row=> gridBody.appendChild(renderRow(row, div.finalized)));
+    }
+    function renderRow(row, finalized){
+      const p = row.p, cmp = row.cmp, s = state.divisions[state.current].scores[p.id]||{};
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="small">${row.rowIndex}</td>
+        <td>${esc(p.number||'')}</td>
+        <td>${esc(p.last)}</td>
+        <td>${esc(p.first)}</td>
+        ${CRITERIA.map(k=> `<td>${scoreSelect(p.id,k,s[k]!==undefined?s[k]:'')}</td>`).join('')}
+        <td>${fmt(cmp.total)}</td>
+        <td>${fmt(cmp.avg)}</td>
+        <td>${finalized && row.tier?`<span class="badge tier-${row.tier}">T${row.tier}</span>`:'—'}</td>
+        <td class="no-print"><button class="secondary" data-act="del" data-id="${p.id}" type="button">Delete</button></td>`;
+      tr.querySelectorAll('select[data-pid]').forEach(sel=> sel.addEventListener('change', ()=> onScoreInput(sel.dataset.pid, sel.dataset.key, sel.value)));
+      tr.querySelector('button[data-act="del"]').addEventListener('click', ()=>{
+        if(confirm(`Remove ${p.last}, ${p.first}?`)){
+          const d = state.divisions[state.current];
+          d.players = d.players.filter(x=> x.id!==p.id);
+          delete d.scores[p.id];
+          save(); render(); toast('Player removed');
+        }
+      });
+      return tr;
+    }
+    function updateRowComputed(playerId){
+      const tr = Array.from(gridBody.querySelectorAll('tr')).find(r => {
+        const del = r.querySelector('button[data-id]'); return del && del.getAttribute('data-id')===playerId;
+      });
+      if(!tr) return;
+      const p = state.divisions[state.current].players.find(x=> x.id===playerId);
+      if(!p) return;
+      const cmp = compute(p);
+      tr.children[8].textContent = fmt(cmp.total);
+      tr.children[9].textContent = fmt(cmp.avg);
+    }
+    function onExportCsv(){
+      if(!state.current){ alert('No division selected'); return; }
+      const div = state.divisions[state.current];
+      const header = ['Season','Year','Division','Finalized','Rank','Number','Last','First',...CRITERIA,'Total','Average','Tier'];
+      const out = [header];
+      const rows = getRows();
+      rows.forEach(r=>{
+        const s = div.scores[r.p.id]||{};
+        out.push([
+          state.season || '',
+          state.year || '',
+          state.current || '',
+          div.finalized ? 'Yes' : 'No',
+          r.rowIndex,
+          r.p.number||'',
+          r.p.last,
+          r.p.first,
+          ...CRITERIA.map(k=> s[k]!==''&&s[k]!==undefined?s[k]:''),
+          r.cmp.total.toFixed(2),
+          r.cmp.avg.toFixed(2),
+          r.tier?`T${r.tier}`:''
+        ]);
+      });
+      const csv = out.map(r=> r.map(c=> {
+        const s = String(c??''); return /[",\n]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s;
+      }).join(',')).join('\n');
+      const seasonSlug = (state.season||'na').toLowerCase();
+      const file = `fp_mobile_${seasonSlug}_${state.year||'yyyy'}_${slug(state.current)}_${(div.finalized?'final':'draft')}.csv`;
+      const url = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'}));
+      const a = document.createElement('a'); a.href=url; a.download=file; a.click();
+      setTimeout(()=> URL.revokeObjectURL(url), 1500);
+    }
+    function onFinalize(){
+      if(!state.current){ alert('No division selected'); return; }
+      const div = state.divisions[state.current];
+      if(!div.players.length){ alert('Add players first.'); return; }
+      if(!state.season || !state.year){ if(!confirm('Season/Year are blank. Finalize anyway?')) return; }
+      if(!confirm('End Assessment? This computes tiers from current averages. (You can Reopen later.)')) return;
+      div.finalized = true; save(); render(); toast('Finalized');
+    }
+    function onReopen(){
+      if(!state.current){ alert('No division selected'); return; }
+      const div = state.divisions[state.current];
+      if(!confirm('Reopen for editing?')) return;
+      div.finalized = false; save(); render(); toast('Reopened');
+    }
+    function parseCsv(text){
+      const rows=[], len=text.length; let i=0, cur='', row=[], inQ=false;
+      while(i<len){ const ch=text[i];
+        if(inQ){ if(ch==='"'){ if(text[i+1]==='"'){cur+='"'; i++;} else inQ=false; } else cur+=ch; }
+        else { if(ch==='"') inQ=true; else if(ch===','){row.push(cur);cur='';} else if(ch==='\n'){row.push(cur);rows.push(row);row=[];cur='';} else if(ch==='\r'){} else cur+=ch; }
+        i++;
+      }
+      if(cur!==''||row.length){ row.push(cur); rows.push(row); }
+      return rows;
+    }
+    function slug(s){ return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
+    function toast(msg){
+      const d=document.createElement('div'); d.textContent=msg;
+      d.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 14px;border-radius:12px;z-index:9999;';
+      document.body.appendChild(d); setTimeout(()=>d.remove(),1100);
+    }
+  }catch(e){ setStatus(false,'Error: '+(e&&e.message?e.message:'Unknown')); console.error(e); }
+})();</script>
+</body>
+</html>
